@@ -108,6 +108,7 @@ defmodule SymphonyElixir.TestSupport do
           max_turns: 20,
           max_retry_backoff_ms: 300_000,
           max_concurrent_agents_by_state: %{},
+          agent_kind: "codex",
           codex_command: "codex app-server",
           codex_approval_policy: %{reject: %{sandbox_approval: true, rules: true, mcp_elicitations: true}},
           codex_thread_sandbox: "workspace-write",
@@ -115,6 +116,15 @@ defmodule SymphonyElixir.TestSupport do
           codex_turn_timeout_ms: 3_600_000,
           codex_read_timeout_ms: 5_000,
           codex_stall_timeout_ms: 300_000,
+          claude_bin: "claude",
+          claude_permission_mode: "bypassPermissions",
+          claude_model: nil,
+          claude_auth: "subscription",
+          claude_allowed_tools: ["mcp__linear__linear_graphql"],
+          claude_turn_timeout_ms: 3_600_000,
+          claude_read_timeout_ms: 5_000,
+          claude_stall_timeout_ms: 300_000,
+          claude_mcp_token: nil,
           hook_after_create: nil,
           hook_before_run: nil,
           hook_after_run: nil,
@@ -164,6 +174,16 @@ defmodule SymphonyElixir.TestSupport do
     server_port = Keyword.get(config, :server_port)
     server_host = Keyword.get(config, :server_host)
     prompt = Keyword.get(config, :prompt)
+    agent_kind = Keyword.get(config, :agent_kind)
+    claude_bin = Keyword.get(config, :claude_bin)
+    claude_permission_mode = Keyword.get(config, :claude_permission_mode)
+    claude_model = Keyword.get(config, :claude_model)
+    claude_auth = Keyword.get(config, :claude_auth)
+    claude_allowed_tools = Keyword.get(config, :claude_allowed_tools)
+    claude_turn_timeout_ms = Keyword.get(config, :claude_turn_timeout_ms)
+    claude_read_timeout_ms = Keyword.get(config, :claude_read_timeout_ms)
+    claude_stall_timeout_ms = Keyword.get(config, :claude_stall_timeout_ms)
+    claude_mcp_token = Keyword.get(config, :claude_mcp_token)
 
     sections =
       [
@@ -183,6 +203,7 @@ defmodule SymphonyElixir.TestSupport do
         "  root: #{yaml_value(workspace_root)}",
         worker_yaml(worker_ssh_hosts, worker_max_concurrent_agents_per_host),
         "agent:",
+        "  kind: #{yaml_value(agent_kind)}",
         "  max_concurrent_agents: #{yaml_value(max_concurrent_agents)}",
         "  max_turns: #{yaml_value(max_turns)}",
         "  max_retry_backoff_ms: #{yaml_value(max_retry_backoff_ms)}",
@@ -195,6 +216,17 @@ defmodule SymphonyElixir.TestSupport do
         "  turn_timeout_ms: #{yaml_value(codex_turn_timeout_ms)}",
         "  read_timeout_ms: #{yaml_value(codex_read_timeout_ms)}",
         "  stall_timeout_ms: #{yaml_value(codex_stall_timeout_ms)}",
+        claude_yaml(
+          claude_bin,
+          claude_permission_mode,
+          claude_model,
+          claude_auth,
+          claude_allowed_tools,
+          claude_turn_timeout_ms,
+          claude_read_timeout_ms,
+          claude_stall_timeout_ms,
+          claude_mcp_token
+        ),
         hooks_yaml(hook_after_create, hook_before_run, hook_after_run, hook_before_remove, hook_timeout_ms),
         observability_yaml(observability_enabled, observability_refresh_ms, observability_render_interval_ms),
         server_yaml(server_port, server_host),
@@ -277,6 +309,23 @@ defmodule SymphonyElixir.TestSupport do
       host && "  host: #{yaml_value(host)}"
     ]
     |> Enum.reject(&is_nil/1)
+    |> Enum.join("\n")
+  end
+
+  defp claude_yaml(bin, permission_mode, model, auth, allowed_tools, turn_timeout_ms, read_timeout_ms, stall_timeout_ms, mcp_token) do
+    [
+      "claude:",
+      "  bin: #{yaml_value(bin)}",
+      "  permission_mode: #{yaml_value(permission_mode)}",
+      model && "  model: #{yaml_value(model)}",
+      "  auth: #{yaml_value(auth)}",
+      "  allowed_tools: #{yaml_value(allowed_tools)}",
+      "  turn_timeout_ms: #{yaml_value(turn_timeout_ms)}",
+      "  read_timeout_ms: #{yaml_value(read_timeout_ms)}",
+      "  stall_timeout_ms: #{yaml_value(stall_timeout_ms)}",
+      mcp_token && "  mcp_token: #{yaml_value(mcp_token)}"
+    ]
+    |> Enum.reject(&(&1 in [nil, false]))
     |> Enum.join("\n")
   end
 
