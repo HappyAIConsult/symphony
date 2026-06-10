@@ -107,6 +107,8 @@ defmodule SymphonyElixir.Claude.AppServer do
         model_args(rt) ++
         tool_args(rt) ++
         mcp_args(rt) ++
+        plugin_args(rt) ++
+        add_dir_args(rt) ++
         budget_args(rt) ++
         Enum.map(rt.extra_args, &shell_escape/1)
 
@@ -134,6 +136,17 @@ defmodule SymphonyElixir.Claude.AppServer do
 
   defp budget_args(%{max_budget_usd: usd}) when is_float(usd), do: ["--max-budget-usd", to_string(usd)]
   defp budget_args(_), do: []
+
+  defp plugin_args(%{plugin_dir: dir}) when is_binary(dir) and dir != "",
+    do: ["--plugin-dir", shell_escape(dir)]
+
+  defp plugin_args(_rt), do: []
+
+  defp add_dir_args(%{add_dirs: dirs}) when is_list(dirs) do
+    Enum.flat_map(dirs, fn dir -> ["--add-dir", shell_escape(dir)] end)
+  end
+
+  defp add_dir_args(_rt), do: []
 
   defp mcp_args(rt) do
     case mcp_url() do

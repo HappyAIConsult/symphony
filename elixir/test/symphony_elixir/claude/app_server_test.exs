@@ -105,4 +105,24 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     assert log =~ "Claude session started for issue_id=id-7 issue_identifier=ENG-7 session_id="
     assert log =~ "Claude session completed for issue_id=id-7 issue_identifier=ENG-7 session_id="
   end
+
+  test "passes --plugin-dir and --add-dir when configured", %{ws: ws, argv_trace: trace, root: root, fake: fake} do
+    write_workflow_file!(Workflow.workflow_file_path(),
+      agent_kind: "claude",
+      workspace_root: root,
+      claude_bin: fake,
+      claude_plugin_dir: "/home/u/sym/knowledge/sym-plugin",
+      claude_add_dirs: ["/home/u/sym/knowledge"]
+    )
+
+    {:ok, session} = AppServer.start_session(ws, [])
+    {:ok, _} = AppServer.run_turn(session, "go", issue(), on_message: fn _ -> :ok end)
+    AppServer.stop_session(session)
+
+    argv = File.read!(trace)
+    assert argv =~ "--plugin-dir"
+    assert argv =~ "sym-plugin"
+    assert argv =~ "--add-dir"
+    assert argv =~ "/home/u/sym/knowledge"
+  end
 end
