@@ -217,15 +217,15 @@ defmodule SymphonyElixir.TestSupport do
         "  read_timeout_ms: #{yaml_value(codex_read_timeout_ms)}",
         "  stall_timeout_ms: #{yaml_value(codex_stall_timeout_ms)}",
         claude_yaml(
-          claude_bin,
-          claude_permission_mode,
-          claude_model,
-          claude_auth,
-          claude_allowed_tools,
-          claude_turn_timeout_ms,
-          claude_read_timeout_ms,
-          claude_stall_timeout_ms,
-          claude_mcp_token
+          bin: claude_bin,
+          permission_mode: claude_permission_mode,
+          model: claude_model,
+          auth: claude_auth,
+          allowed_tools: claude_allowed_tools,
+          turn_timeout_ms: claude_turn_timeout_ms,
+          read_timeout_ms: claude_read_timeout_ms,
+          stall_timeout_ms: claude_stall_timeout_ms,
+          mcp_token: claude_mcp_token
         ),
         hooks_yaml(hook_after_create, hook_before_run, hook_after_run, hook_before_remove, hook_timeout_ms),
         observability_yaml(observability_enabled, observability_refresh_ms, observability_render_interval_ms),
@@ -312,18 +312,18 @@ defmodule SymphonyElixir.TestSupport do
     |> Enum.join("\n")
   end
 
-  defp claude_yaml(bin, permission_mode, model, auth, allowed_tools, turn_timeout_ms, read_timeout_ms, stall_timeout_ms, mcp_token) do
+  defp claude_yaml(opts) do
     [
       "claude:",
-      "  bin: #{yaml_value(bin)}",
-      "  permission_mode: #{yaml_value(permission_mode)}",
-      model && "  model: #{yaml_value(model)}",
-      "  auth: #{yaml_value(auth)}",
-      "  allowed_tools: #{yaml_value(allowed_tools)}",
-      "  turn_timeout_ms: #{yaml_value(turn_timeout_ms)}",
-      "  read_timeout_ms: #{yaml_value(read_timeout_ms)}",
-      "  stall_timeout_ms: #{yaml_value(stall_timeout_ms)}",
-      mcp_token && "  mcp_token: #{yaml_value(mcp_token)}"
+      "  bin: #{yaml_value(opts[:bin])}",
+      "  permission_mode: #{yaml_value(opts[:permission_mode])}",
+      opts[:model] && "  model: #{yaml_value(opts[:model])}",
+      "  auth: #{yaml_value(opts[:auth])}",
+      "  allowed_tools: #{yaml_value(opts[:allowed_tools])}",
+      "  turn_timeout_ms: #{yaml_value(opts[:turn_timeout_ms])}",
+      "  read_timeout_ms: #{yaml_value(opts[:read_timeout_ms])}",
+      "  stall_timeout_ms: #{yaml_value(opts[:stall_timeout_ms])}",
+      opts[:mcp_token] && "  mcp_token: #{yaml_value(opts[:mcp_token])}"
     ]
     |> Enum.reject(&(&1 in [nil, false]))
     |> Enum.join("\n")

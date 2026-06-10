@@ -54,9 +54,7 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     {:ok, session} = AppServer.start_session(ws, [])
 
     assert {:ok, result} =
-             AppServer.run_turn(session, "do the task", issue(),
-               on_message: fn msg -> send(test_pid, {:claude_msg, msg}) end
-             )
+             AppServer.run_turn(session, "do the task", issue(), on_message: fn msg -> send(test_pid, {:claude_msg, msg}) end)
 
     assert result.result == "done"
     assert is_binary(result.session_id)

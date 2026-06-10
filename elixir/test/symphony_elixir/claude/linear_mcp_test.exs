@@ -55,6 +55,6 @@ defmodule SymphonyElixir.Claude.LinearMcpTest do
 
   test "unknown method returns a JSON-RPC error" do
     resp = LinearMcp.handle_request(%{"jsonrpc" => "2.0", "id" => 5, "method" => "nope", "params" => %{}})
-    assert resp["error"]["code"] == -32601
+    assert resp["error"]["code"] == -32_601
   end
 end
