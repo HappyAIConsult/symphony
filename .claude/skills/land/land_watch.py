@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import asyncio
 import json
+import os
 import random
 import re
 from dataclasses import dataclass
@@ -9,12 +10,32 @@ from typing import Any
 
 POLL_SECONDS = 10
 CHECKS_APPEAR_TIMEOUT_SECONDS = 120
-CODEX_BOTS = {
+
+_DEFAULT_REVIEW_BOTS = {
     "chatgpt-codex-connector[bot]",
     "github-actions[bot]",
     "codex-gc-app[bot]",
     "app/codex-gc-app",
 }
+# Bot logins whose comments count as automated AI review feedback.
+# Override with a comma-separated SYMPHONY_LAND_AI_REVIEW_BOTS.
+_bots_env = os.environ.get("SYMPHONY_LAND_AI_REVIEW_BOTS", "").strip()
+CODEX_BOTS = {b.strip() for b in _bots_env.split(",") if b.strip()} or _DEFAULT_REVIEW_BOTS
+
+# Automated AI code-review integration is OFF by default. Enable it only when a
+# CI workflow actually posts AI review comments on PRs (Claude or Codex). With
+# it off, `land` still respects human reviews and CI checks, but does not block
+# waiting for an AI reviewer that never comments.
+AI_REVIEW_ENABLED = (
+    os.environ.get("SYMPHONY_LAND_WAIT_FOR_AI_REVIEW", "").strip().lower()
+    in ("1", "true", "yes", "on")
+)
+# Marker that identifies an automated AI review comment body.
+AI_REVIEW_MARKER = os.environ.get("SYMPHONY_LAND_AI_REVIEW_MARKER", "## Codex Review")
+# Prefix the agent puts on its own PR/issue replies so the watcher can tell its
+# own acknowledgements apart from new, unaddressed feedback.
+AGENT_REPLY_PREFIX = os.environ.get("SYMPHONY_LAND_AGENT_PREFIX", "[claude]")
+
 MAX_GH_RETRIES = 5
 BASE_GH_BACKOFF_SECONDS = 2
 
@@ -280,11 +301,11 @@ def is_bot_user(user: dict[str, Any]) -> bool:
 
 
 def is_codex_reply_body(body: str) -> bool:
-    return body.startswith("[codex]")
+    return body.startswith(AGENT_REPLY_PREFIX)
 
 
 def is_codex_review_body(body: str) -> bool:
-    return body.startswith("## Codex Review")
+    return body.startswith(AI_REVIEW_MARKER)
 
 
 def latest_codex_issue_reply_time(
@@ -417,7 +438,7 @@ def is_blocking_review(
     state = review.get("state")
     if user_login in CODEX_BOTS:
         return state == "CHANGES_REQUESTED"
-    if body.startswith("[codex]") or state in ("APPROVED", "DISMISSED"):
+    if body.startswith(AGENT_REPLY_PREFIX) or state in ("APPROVED", "DISMISSED"):
         return False
     blocking = False
     if body or state == "CHANGES_REQUESTED":
@@ -529,14 +550,14 @@ async def wait_for_codex(pr_number: int, checks_done: asyncio.Event) -> None:
             reviews,
             review_request_at,
         )
-        if bot_comments:
+        if AI_REVIEW_ENABLED and bot_comments:
             latest = max(
                 bot_comments,
                 key=lambda comment: parse_time(comment["created_at"]),
             )
             body = sanitize_terminal_output(latest.get("body") or "").strip()
             if body:
-                print("Codex left comments. Address feedback before merge.")
+                print("AI reviewer left comments. Address feedback before merge.")
                 print(body)
                 raise SystemExit(2)
         if checks_done.is_set():
