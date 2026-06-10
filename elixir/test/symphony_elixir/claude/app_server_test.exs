@@ -17,6 +17,7 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     script = """
     #!/bin/sh
     printf '%s\\n' "$*" >> "#{argv_trace}"
+    printf 'ENV:%s\\n' "$CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD" >> "#{Path.join(root, "env.log")}"
     printf '%s\\n' '{"type":"system","subtype":"init","session_id":"s-1","tools":[]}'
     printf '%s\\n' '{"type":"assistant","message":{"content":[{"type":"text","text":"working"}],"usage":{"output_tokens":2}}}'
     printf '%s\\n' '{"type":"result","subtype":"success","is_error":false,"result":"done","usage":{"input_tokens":1,"output_tokens":2},"total_cost_usd":0.001,"num_turns":1}'
@@ -124,5 +125,13 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     assert argv =~ "sym-plugin"
     assert argv =~ "--add-dir"
     assert argv =~ "/home/u/sym/knowledge"
+  end
+
+  test "sets CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD=1 so add-dir CLAUDE.md auto-loads", %{ws: ws, root: root} do
+    {:ok, session} = AppServer.start_session(ws, [])
+    {:ok, _} = AppServer.run_turn(session, "go", issue(), on_message: fn _ -> :ok end)
+    AppServer.stop_session(session)
+
+    assert File.read!(Path.join(root, "env.log")) =~ "ENV:1"
   end
 end

@@ -200,6 +200,7 @@ defmodule SymphonyElixir.Claude.AppServer do
               :stderr_to_stdout,
               args: [~c"-lc", String.to_charlist(command)],
               cd: String.to_charlist(workspace),
+              env: [{~c"CLAUDE_CODE_ADDITIONAL_DIRECTORIES_CLAUDE_MD", ~c"1"}],
               line: @port_line_bytes
             ]
           )
