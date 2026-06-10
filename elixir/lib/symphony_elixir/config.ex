@@ -126,7 +126,9 @@ defmodule SymphonyElixir.Config do
           max_budget_usd: float() | nil,
           turn_timeout_ms: pos_integer(),
           read_timeout_ms: pos_integer(),
-          mcp_token: String.t() | nil
+          mcp_token: String.t() | nil,
+          plugin_dir: String.t() | nil,
+          add_dirs: [String.t()]
         }
 
   @spec agent_kind() :: :codex | :claude
@@ -155,7 +157,9 @@ defmodule SymphonyElixir.Config do
          max_budget_usd: c.max_budget_usd,
          turn_timeout_ms: c.turn_timeout_ms,
          read_timeout_ms: c.read_timeout_ms,
-         mcp_token: c.mcp_token
+         mcp_token: c.mcp_token,
+         plugin_dir: c.plugin_dir,
+         add_dirs: c.add_dirs
        }}
     end
   end

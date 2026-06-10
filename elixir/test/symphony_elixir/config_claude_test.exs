@@ -53,4 +53,20 @@ defmodule SymphonyElixir.ConfigClaudeTest do
     assert rt.allowed_tools == ["mcp__linear__linear_graphql"]
     assert rt.turn_timeout_ms == 3_600_000
   end
+
+  test "claude plugin_dir and add_dirs parse and surface via runtime settings" do
+    write_workflow_file!(Workflow.workflow_file_path(),
+      agent_kind: "claude",
+      claude_plugin_dir: "/home/u/sym/knowledge/sym-plugin",
+      claude_add_dirs: ["/home/u/sym/knowledge"]
+    )
+
+    c = Config.settings!().claude
+    assert c.plugin_dir == "/home/u/sym/knowledge/sym-plugin"
+    assert c.add_dirs == ["/home/u/sym/knowledge"]
+
+    assert {:ok, rt} = Config.claude_runtime_settings()
+    assert rt.plugin_dir == "/home/u/sym/knowledge/sym-plugin"
+    assert rt.add_dirs == ["/home/u/sym/knowledge"]
+  end
 end

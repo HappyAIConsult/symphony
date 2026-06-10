@@ -227,6 +227,8 @@ defmodule SymphonyElixir.Config.Schema do
       field(:read_timeout_ms, :integer, default: 5_000)
       field(:stall_timeout_ms, :integer, default: 300_000)
       field(:mcp_token, :string)
+      field(:plugin_dir, :string)
+      field(:add_dirs, {:array, :string}, default: [])
     end
 
     @spec changeset(%__MODULE__{}, map()) :: Ecto.Changeset.t()
@@ -247,7 +249,9 @@ defmodule SymphonyElixir.Config.Schema do
           :turn_timeout_ms,
           :read_timeout_ms,
           :stall_timeout_ms,
-          :mcp_token
+          :mcp_token,
+          :plugin_dir,
+          :add_dirs
         ],
         empty_values: []
       )
