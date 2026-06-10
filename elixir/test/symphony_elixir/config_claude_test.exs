@@ -35,4 +35,22 @@ defmodule SymphonyElixir.ConfigClaudeTest do
     assert claude.permission_mode == "acceptEdits"
     assert claude.auth == "api_key"
   end
+
+  test "agent_kind/0 returns the configured backend as an atom" do
+    write_workflow_file!(Workflow.workflow_file_path())
+    assert Config.agent_kind() == :codex
+
+    write_workflow_file!(Workflow.workflow_file_path(), agent_kind: "claude")
+    assert Config.agent_kind() == :claude
+  end
+
+  test "claude_runtime_settings/0 surfaces the claude policy fields" do
+    write_workflow_file!(Workflow.workflow_file_path(), agent_kind: "claude", claude_model: "sonnet")
+    assert {:ok, rt} = Config.claude_runtime_settings()
+    assert rt.bin == "claude"
+    assert rt.permission_mode == "bypassPermissions"
+    assert rt.model == "sonnet"
+    assert rt.allowed_tools == ["mcp__linear__linear_graphql"]
+    assert rt.turn_timeout_ms == 3_600_000
+  end
 end

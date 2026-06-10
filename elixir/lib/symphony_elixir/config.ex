@@ -114,6 +114,52 @@ defmodule SymphonyElixir.Config do
     end
   end
 
+  @type claude_runtime_settings :: %{
+          bin: String.t(),
+          permission_mode: String.t(),
+          model: String.t() | nil,
+          fallback_model: String.t() | nil,
+          allowed_tools: [String.t()],
+          disallowed_tools: [String.t()],
+          extra_args: [String.t()],
+          auth: String.t(),
+          max_budget_usd: float() | nil,
+          turn_timeout_ms: pos_integer(),
+          read_timeout_ms: pos_integer(),
+          mcp_token: String.t() | nil
+        }
+
+  @spec agent_kind() :: :codex | :claude
+  def agent_kind do
+    case settings!().agent.kind do
+      "claude" -> :claude
+      _ -> :codex
+    end
+  end
+
+  @spec claude_runtime_settings() :: {:ok, claude_runtime_settings()} | {:error, term()}
+  def claude_runtime_settings do
+    with {:ok, settings} <- settings() do
+      c = settings.claude
+
+      {:ok,
+       %{
+         bin: c.bin,
+         permission_mode: c.permission_mode,
+         model: c.model,
+         fallback_model: c.fallback_model,
+         allowed_tools: c.allowed_tools,
+         disallowed_tools: c.disallowed_tools,
+         extra_args: c.extra_args,
+         auth: c.auth,
+         max_budget_usd: c.max_budget_usd,
+         turn_timeout_ms: c.turn_timeout_ms,
+         read_timeout_ms: c.read_timeout_ms,
+         mcp_token: c.mcp_token
+       }}
+    end
+  end
+
   defp validate_semantics(settings) do
     cond do
       is_nil(settings.tracker.kind) ->
