@@ -77,4 +77,22 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     assert first =~ "--session-id"
     assert second =~ "--resume"
   end
+
+  test "passes --mcp-config when server endpoint is configured", %{ws: ws, argv_trace: trace, root: root, fake: fake} do
+    write_workflow_file!(Workflow.workflow_file_path(),
+      agent_kind: "claude",
+      workspace_root: root,
+      claude_bin: fake,
+      server_port: 4599,
+      server_host: "127.0.0.1"
+    )
+
+    {:ok, session} = AppServer.start_session(ws, [])
+    {:ok, _} = AppServer.run_turn(session, "go", issue(), on_message: fn _ -> :ok end)
+    AppServer.stop_session(session)
+
+    argv = File.read!(trace)
+    assert argv =~ "--mcp-config"
+    assert argv =~ "127.0.0.1:4599/mcp"
+  end
 end

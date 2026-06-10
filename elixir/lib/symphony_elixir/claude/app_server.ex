@@ -119,13 +119,31 @@ defmodule SymphonyElixir.Claude.AppServer do
   defp budget_args(_), do: []
 
   defp mcp_args(rt) do
-    case System.get_env("SYMPHONY_MCP_URL") do
-      url when is_binary(url) and url != "" ->
+    case mcp_url() do
+      url when is_binary(url) ->
         config = Jason.encode!(%{"mcpServers" => %{"linear" => mcp_server_entry(url, rt)}})
         ["--mcp-config", shell_escape(config), "--strict-mcp-config"]
 
-      _ ->
+      nil ->
         []
+    end
+  end
+
+  defp mcp_url do
+    case System.get_env("SYMPHONY_MCP_URL") do
+      url when is_binary(url) and url != "" ->
+        url
+
+      _ ->
+        settings = Config.settings!()
+
+        case Config.server_port() do
+          port when is_integer(port) and port > 0 ->
+            "http://#{settings.server.host}:#{port}/mcp"
+
+          _ ->
+            nil
+        end
     end
   end
 
