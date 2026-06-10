@@ -128,7 +128,8 @@ defmodule SymphonyElixir.Config do
           read_timeout_ms: pos_integer(),
           mcp_token: String.t() | nil,
           plugin_dir: String.t() | nil,
-          add_dirs: [String.t()]
+          add_dirs: [String.t()],
+          playwright: boolean()
         }
 
   @spec agent_kind() :: :codex | :claude
@@ -159,7 +160,8 @@ defmodule SymphonyElixir.Config do
          read_timeout_ms: c.read_timeout_ms,
          mcp_token: c.mcp_token,
          plugin_dir: c.plugin_dir,
-         add_dirs: c.add_dirs
+         add_dirs: c.add_dirs,
+         playwright: c.playwright
        }}
     end
   end

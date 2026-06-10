@@ -127,6 +127,7 @@ defmodule SymphonyElixir.TestSupport do
           claude_mcp_token: nil,
           claude_plugin_dir: nil,
           claude_add_dirs: [],
+          claude_playwright: false,
           hook_after_create: nil,
           hook_before_run: nil,
           hook_after_run: nil,
@@ -188,6 +189,7 @@ defmodule SymphonyElixir.TestSupport do
     claude_mcp_token = Keyword.get(config, :claude_mcp_token)
     claude_plugin_dir = Keyword.get(config, :claude_plugin_dir)
     claude_add_dirs = Keyword.get(config, :claude_add_dirs)
+    claude_playwright = Keyword.get(config, :claude_playwright)
 
     sections =
       [
@@ -231,7 +233,8 @@ defmodule SymphonyElixir.TestSupport do
           stall_timeout_ms: claude_stall_timeout_ms,
           mcp_token: claude_mcp_token,
           plugin_dir: claude_plugin_dir,
-          add_dirs: claude_add_dirs
+          add_dirs: claude_add_dirs,
+          playwright: claude_playwright
         ),
         hooks_yaml(hook_after_create, hook_before_run, hook_after_run, hook_before_remove, hook_timeout_ms),
         observability_yaml(observability_enabled, observability_refresh_ms, observability_render_interval_ms),
@@ -331,7 +334,8 @@ defmodule SymphonyElixir.TestSupport do
       "  stall_timeout_ms: #{yaml_value(opts[:stall_timeout_ms])}",
       opts[:mcp_token] && "  mcp_token: #{yaml_value(opts[:mcp_token])}",
       opts[:plugin_dir] && "  plugin_dir: #{yaml_value(opts[:plugin_dir])}",
-      "  add_dirs: #{yaml_value(opts[:add_dirs] || [])}"
+      "  add_dirs: #{yaml_value(opts[:add_dirs] || [])}",
+      opts[:playwright] && "  playwright: true"
     ]
     |> Enum.reject(&(&1 in [nil, false]))
     |> Enum.join("\n")

@@ -229,6 +229,7 @@ defmodule SymphonyElixir.Config.Schema do
       field(:mcp_token, :string)
       field(:plugin_dir, :string)
       field(:add_dirs, {:array, :string}, default: [])
+      field(:playwright, :boolean, default: false)
     end
 
     @spec changeset(%__MODULE__{}, map()) :: Ecto.Changeset.t()
@@ -251,7 +252,8 @@ defmodule SymphonyElixir.Config.Schema do
           :stall_timeout_ms,
           :mcp_token,
           :plugin_dir,
-          :add_dirs
+          :add_dirs,
+          :playwright
         ],
         empty_values: []
       )

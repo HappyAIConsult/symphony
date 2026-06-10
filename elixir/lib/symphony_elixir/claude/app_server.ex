@@ -149,15 +149,35 @@ defmodule SymphonyElixir.Claude.AppServer do
   defp add_dir_args(_rt), do: []
 
   defp mcp_args(rt) do
-    case mcp_url() do
-      url when is_binary(url) ->
-        config = Jason.encode!(%{"mcpServers" => %{"linear" => mcp_server_entry(url, rt)}})
-        ["--mcp-config", shell_escape(config), "--strict-mcp-config"]
+    servers =
+      %{}
+      |> maybe_put_linear(rt)
+      |> maybe_put_playwright(rt)
 
-      nil ->
-        []
+    if map_size(servers) > 0 do
+      config = Jason.encode!(%{"mcpServers" => servers})
+      ["--mcp-config", shell_escape(config), "--strict-mcp-config"]
+    else
+      []
     end
   end
+
+  defp maybe_put_linear(servers, rt) do
+    case mcp_url() do
+      url when is_binary(url) -> Map.put(servers, "linear", mcp_server_entry(url, rt))
+      nil -> servers
+    end
+  end
+
+  defp maybe_put_playwright(servers, %{playwright: true}) do
+    Map.put(servers, "playwright", %{
+      "type" => "stdio",
+      "command" => "npx",
+      "args" => ["-y", "@playwright/mcp@latest", "--headless", "--isolated"]
+    })
+  end
+
+  defp maybe_put_playwright(servers, _rt), do: servers
 
   defp mcp_url do
     case System.get_env("SYMPHONY_MCP_URL") do

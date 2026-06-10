@@ -134,4 +134,21 @@ defmodule SymphonyElixir.Claude.AppServerTest do
 
     assert File.read!(Path.join(root, "env.log")) =~ "ENV:1"
   end
+
+  test "includes playwright stdio MCP server when claude.playwright is set", %{ws: ws, argv_trace: trace, root: root, fake: fake} do
+    write_workflow_file!(Workflow.workflow_file_path(),
+      agent_kind: "claude",
+      workspace_root: root,
+      claude_bin: fake,
+      claude_playwright: true
+    )
+
+    {:ok, session} = AppServer.start_session(ws, [])
+    {:ok, _} = AppServer.run_turn(session, "go", issue(), on_message: fn _ -> :ok end)
+    AppServer.stop_session(session)
+
+    argv = File.read!(trace)
+    assert argv =~ "playwright"
+    assert argv =~ "@playwright/mcp"
+  end
 end
