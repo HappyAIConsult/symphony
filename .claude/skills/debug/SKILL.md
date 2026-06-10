@@ -11,7 +11,7 @@ description:
 ## Goals
 
 - Find why a run is stuck, retrying, or failing.
-- Correlate Linear issue identity to a Codex session quickly.
+- Correlate Linear issue identity to a Codex/Claude session quickly.
 - Read the right logs in the right order to isolate root cause.
 
 ## Log Sources
@@ -57,7 +57,7 @@ rg -o "session_id=[^ ;]+" log/symphony.log* | sort -u
 rg -n "session_id=<thread>-<turn>" log/symphony.log*
 
 # 5) Focus on stuck/retry signals
-rg -n "Issue stalled|scheduling retry|turn_timeout|turn_failed|Codex session failed|Codex session ended with error" log/symphony.log*
+rg -n "Issue stalled|scheduling retry|turn_timeout|turn_failed|(Codex|Claude) session failed|(Codex|Claude) session ended with error" log/symphony.log*
 ```
 
 ## Investigation Flow
@@ -66,12 +66,12 @@ rg -n "Issue stalled|scheduling retry|turn_timeout|turn_failed|Codex session fai
     - Search by `issue_identifier=<KEY>`.
     - If noise is high, add `issue_id=<UUID>`.
 2. Establish timeline:
-    - Identify first `Codex session started ... session_id=...`.
-    - Follow with `Codex session completed`, `ended with error`, or worker exit
+    - Identify first `Codex/Claude session started ... session_id=...`.
+    - Follow with `Codex/Claude session completed`, `ended with error`, or worker exit
       lines.
 3. Classify the problem:
     - Stall loop: `Issue stalled ... restarting with backoff`.
-    - App-server startup: `Codex session failed ...`.
+    - App-server startup: `Codex/Claude session failed ...`.
     - Turn execution failure: `turn_failed`, `turn_cancelled`, `turn_timeout`, or
       `ended with error`.
     - Worker crash: `Agent task exited ... reason=...`.
@@ -83,16 +83,16 @@ rg -n "Issue stalled|scheduling retry|turn_timeout|turn_failed|Codex session fai
       `session_id`.
     - Record probable root cause and the exact failing stage.
 
-## Reading Codex Session Logs
+## Reading Agent Session Logs
 
-In Symphony, Codex session diagnostics are emitted into `log/symphony.log` and
+In Symphony, Codex/Claude session diagnostics are emitted into `log/symphony.log` and
 keyed by `session_id`. Read them as a lifecycle:
 
-1. `Codex session started ... session_id=...`
+1. `Codex/Claude session started ... session_id=...`
 2. Session stream/lifecycle events for the same `session_id`
 3. Terminal event:
-    - `Codex session completed ...`, or
-    - `Codex session ended with error ...`, or
+    - `Codex/Claude session completed ...`, or
+    - `Codex/Claude session ended with error ...`, or
     - `Issue stalled ... restarting with backoff`
 
 For one specific session investigation, keep the trace narrow:
@@ -101,7 +101,7 @@ For one specific session investigation, keep the trace narrow:
 2. Build a timestamped slice for only that session:
     - `rg -n "session_id=<thread>-<turn>" log/symphony.log*`
 3. Mark the exact failing stage:
-    - Startup failure before stream events (`Codex session failed ...`).
+    - Startup failure before stream events (`Codex/Claude session failed ...`).
     - Turn/runtime failure after stream events (`turn_*` / `ended with error`).
     - Stall recovery (`Issue stalled ... restarting with backoff`).
 4. Pair findings with `issue_identifier` and `issue_id` from nearby lines to

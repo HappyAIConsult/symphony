@@ -93,4 +93,16 @@ defmodule SymphonyElixir.Claude.AppServerTest do
     assert argv =~ "--mcp-config"
     assert argv =~ "127.0.0.1:4599/mcp"
   end
+
+  test "emits Claude session lifecycle logs for diagnostics", %{ws: ws} do
+    log =
+      capture_log([level: :info], fn ->
+        {:ok, session} = AppServer.start_session(ws, [])
+        {:ok, _} = AppServer.run_turn(session, "go", issue(), on_message: fn _ -> :ok end)
+        AppServer.stop_session(session)
+      end)
+
+    assert log =~ "Claude session started for issue_id=id-7 issue_identifier=ENG-7 session_id="
+    assert log =~ "Claude session completed for issue_id=id-7 issue_identifier=ENG-7 session_id="
+  end
 end

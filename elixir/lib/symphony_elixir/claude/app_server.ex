@@ -34,32 +34,49 @@ defmodule SymphonyElixir.Claude.AppServer do
 
   @impl true
   @spec run_turn(map(), String.t(), map(), keyword()) :: {:ok, map()} | {:error, term()}
-  def run_turn(session, prompt, _issue, opts \\ []) do
+  def run_turn(session, prompt, issue, opts \\ []) do
     on_message = Keyword.get(opts, :on_message, fn _ -> :ok end)
     {:ok, rt} = Config.claude_runtime_settings()
 
     turn_number = turn_number(session)
     session_id = "#{session.thread_id}-#{turn_number}"
     emit(on_message, :session_started, %{session_id: session_id, thread_id: session.thread_id}, session.metadata)
+    Logger.info("Claude session started for #{issue_context(issue)} session_id=#{session_id}")
 
     command = build_command(session, prompt, rt)
 
     case start_port(session.workspace, session.worker_host, command) do
       {:ok, port} ->
-        try do
-          port
-          |> receive_loop(on_message, rt.turn_timeout_ms, "", session, %{ok: false, result: nil, usage: nil})
-          |> finalize(session, session_id, turn_number, on_message)
-        after
-          mark_session_started(session)
-          close_port(port)
-        end
+        result =
+          try do
+            port
+            |> receive_loop(on_message, rt.turn_timeout_ms, "", session, %{ok: false, result: nil, usage: nil})
+            |> finalize(session, session_id, turn_number, on_message)
+          after
+            mark_session_started(session)
+            close_port(port)
+          end
+
+        log_outcome(result, issue, session_id)
+        result
 
       {:error, reason} ->
         emit(on_message, :startup_failed, %{reason: reason}, session.metadata)
+        Logger.error("Claude session failed for #{issue_context(issue)}: #{inspect(reason)}")
         {:error, reason}
     end
   end
+
+  defp log_outcome({:ok, _result}, issue, session_id) do
+    Logger.info("Claude session completed for #{issue_context(issue)} session_id=#{session_id}")
+  end
+
+  defp log_outcome({:error, reason}, issue, session_id) do
+    Logger.warning("Claude session ended with error for #{issue_context(issue)} session_id=#{session_id}: #{inspect(reason)}")
+  end
+
+  defp issue_context(%{id: id, identifier: identifier}), do: "issue_id=#{id} issue_identifier=#{identifier}"
+  defp issue_context(_issue), do: "issue_id=unknown issue_identifier=unknown"
 
   @impl true
   @spec stop_session(map()) :: :ok
