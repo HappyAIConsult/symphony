@@ -423,7 +423,7 @@ Expected: 6 файлов (director, analyst, architect, developer, reviewer/tech
 
 ## Task 9: Закоммитить knowledge и создать GitHub-бэкап
 
-**Files:** GitHub repo `octopuscourse-cloud/sym-knowledge` (private) + push.
+**Files:** GitHub repo `HappyAIConsult/sym-knowledge` (private) + push.
 
 - [ ] **Step 1: Коммит всего содержимого**
 
@@ -441,11 +441,11 @@ TOKEN=$(grep '^GITHUB_TOKEN=' /mnt/c/xProjects/s_agent/.env | cut -d= -f2- | tr 
 curl -s -X POST -H "Authorization: Bearer $TOKEN" -H "Accept: application/vnd.github+json" \
   https://api.github.com/user/repos -d '{"name":"sym-knowledge","private":true}' | grep -E '"full_name"|"message"' | head -2
 cd ~/sym/knowledge
-git remote add origin "https://x-access-token:${TOKEN}@github.com/octopuscourse-cloud/sym-knowledge.git"
+git remote add origin "https://x-access-token:${TOKEN}@github.com/HappyAIConsult/sym-knowledge.git"
 GIT_TERMINAL_PROMPT=0 git push -u origin main 2>&1 | sed -E 's#x-access-token:[^@]*@#x-access-token:***@#g'
-git remote set-url origin https://github.com/octopuscourse-cloud/sym-knowledge.git
+git remote set-url origin https://github.com/HappyAIConsult/sym-knowledge.git
 ```
-Expected: репо создан (`full_name: octopuscourse-cloud/sym-knowledge`), push прошёл, токен зачищен из remote.
+Expected: репо создан (`full_name: HappyAIConsult/sym-knowledge`), push прошёл, токен зачищен из remote.
 
 - [ ] **Step 3: Финальная проверка**
 

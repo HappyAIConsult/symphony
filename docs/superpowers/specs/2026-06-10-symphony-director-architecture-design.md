@@ -35,7 +35,7 @@ Durable на диске = **engine + knowledge** («мозг» директор�
 
 ```
 ~/sym/
-├── engine/                              # Symphony (форк octopuscourse-cloud/symphony)   [git]
+├── engine/                              # Symphony (форк HappyAIConsult/symphony)   [git]
 ├── knowledge/                           # ЕДИНЫЙ durable git-репо                          [git]
 │   ├── global/                          #   кросс-проектное
 │   │   ├── owner-profile.md             #     кто владелец, стиль, предпочтения
