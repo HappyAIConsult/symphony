@@ -4,6 +4,9 @@ defmodule SymphonyElixir.Codex.AppServer do
   """
 
   require Logger
+
+  @behaviour SymphonyElixir.AgentBackend
+
   alias SymphonyElixir.{Codex.DynamicTool, Config, SSH}
 
   @initialize_id 1
